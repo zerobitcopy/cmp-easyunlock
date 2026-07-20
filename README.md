@@ -32,13 +32,16 @@ A Canary in the Crypto Mine: Defeating Stack Protection in a GPU Secure Coproces
 
 
 ## 🚀 Quick Start
-**Unlock to 80G** Full Specification
+**Unlock vram and compute** Full Specification
 Execute the one-click unlock script to restore full memory and computing performance:
 ```
-./unlock.sh
+./unlock.sh --vram=8g_to_32g   # 8GB card → 32GB unlock
+./unlock.sh --vram=8g_to_64g   # 8GB card → 64GB unlock
+./unlock.sh --vram=10g_to_40g  # 10GB card → 40GB unlock
+./unlock.sh --vram=10g_to_80g  # 10GB card → 80GB unlock
 ```
 
-Restore Official 10G Default Specification
+Restore Official Default Specification
 Execute the reset script to roll back to the factory locked state:
 ```
 ./reset.sh

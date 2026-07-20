@@ -5,8 +5,7 @@ set -euo pipefail
 DRV_VERSION="580.159.03"
 SRC_DIR="./open-gpu-kernel-modules-${DRV_VERSION}"
 FW_DIR="./firmware"
-# 80G firmware file
-FW_TYPE="gsp_tu10x.bin.80"
+FW_TYPE=""
 KERN_VER=$(uname -r)
 # Compiled kernel objects stay inside source folder, no copy to system module dir
 KO_PATH="${SRC_DIR}/kernel-open"
@@ -17,11 +16,57 @@ NVIDIA_RUN_FILE="./NVIDIA-Linux-x86_64-${DRV_VERSION}.run"
 WGET_UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126.0.0.0 Safari/537.36"
 # ==========================================================
 
+# ===================== Parse Input Arguments =====================
+show_usage() {
+    echo -e "\033[31mUsage: $0 --vram=<mode>\033[0m"
+    echo "Valid vram modes:"
+    echo "  --vram=8g_to_32g   -> 8GB card → 32GB unlock"
+    echo "  --vram=8g_to_64g   -> 8GB card → 64GB unlock"
+    echo "  --vram=10g_to_40g  -> 10GB card → 40GB unlock"
+    echo "  --vram=10g_to_80g  -> 10GB card → 80GB unlock"
+    exit 1
+}
+
+if [[ $# -ne 1 ]]; then
+    echo -e "\033[31mERROR: Missing required --vram parameter!\033[0m"
+    show_usage
+fi
+
+VRAM_ARG="$1"
+if [[ ! "${VRAM_ARG}" =~ ^--vram= ]]; then
+    echo -e "\033[31mERROR: Invalid argument, must start with --vram=\033[0m"
+    show_usage
+fi
+
+VRAM_MODE="${VRAM_ARG#--vram=}"
+
+# get FW_TYPE
+case "${VRAM_MODE}" in
+    "8g_to_32g")
+        FW_TYPE="gsp_tu10x.bin.32"
+        ;;
+    "8g_to_64g")
+        FW_TYPE="gsp_tu10x.bin.64"
+        ;;
+    "10g_to_40g")
+        FW_TYPE="gsp_tu10x.bin.40"
+        ;;
+    "10g_to_80g")
+        FW_TYPE="gsp_tu10x.bin.80"
+        ;;
+    *)
+        echo -e "\033[31mERROR: Unknown vram mode '${VRAM_MODE}'\033[0m"
+        show_usage
+        ;;
+esac
+
 echo -e "\033[32m===== NVIDIA OpenGPU Build & Temporary Insmod Loader Script =====\033[0m"
 echo "Kernel Version: ${KERN_VER}"
 echo "Driver Version: ${DRV_VERSION}"
 echo "Source Directory: ${SRC_DIR}"
 echo "KO Path (direct insmod): ${KO_PATH}"
+echo "Selected VRAM Mode: ${VRAM_MODE}"
+echo "Target Firmware File: ${FW_TYPE}"
 echo -e "\033[33mNote: KO files will NOT be copied to system module directories, only temporary loaded. Original driver restores after reboot.\033[0m"
 
 # Require root privilege
@@ -166,6 +211,7 @@ if [ ! -f "${FW_DIR}/gsp_tu10x.bin" ]; then
     cp -f "/usr/lib/firmware/nvidia/${DRV_VERSION}/gsp_tu10x.bin" "${FW_DIR}/gsp_tu10x.bin"
 fi
 cp "${FW_DIR}/${FW_TYPE}" /usr/lib/firmware/nvidia/${DRV_VERSION}/gsp_tu10x.bin -f
+echo -e "\033[32m✅ Firmware replaced with ${FW_TYPE}\033[0m"
 
 # Step 4: Direct insmod load compiled KO from source directory
 echo -e "\033[34m[5/5] Direct insmod load compiled KO files inside source folder\033[0m"
