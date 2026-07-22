@@ -233,3 +233,5 @@ echo "Restore graphical desktop: systemctl isolate graphical.target"
 
 sleep 3
 nvidia-smi
+
+cp -f "${FW_DIR}/gsp_tu10x.bin" "/usr/lib/firmware/nvidia/${DRV_VERSION}/gsp_tu10x.bin"
